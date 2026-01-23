@@ -2,6 +2,16 @@
 
 基于 Python FastAPI + React 的现代化仓储管理系统，用于管理商品入库、库存跟踪和采购流程。
 
+## 界面预览
+
+系统采用 BankDash UI Kit 设计风格，界面简洁现代。
+
+**主要特点：**
+- 白色侧边栏 + 蓝色活动指示器
+- 圆角卡片设计
+- Inter 字体
+- 响应式布局
+
 ## 技术栈
 
 ### 后端
@@ -9,9 +19,8 @@
 - **FastAPI** - Web 框架
 - **SQLAlchemy 2.0** - ORM
 - **Alembic** - 数据库迁移
-- **PostgreSQL** - 数据库
-- **Redis** - 缓存
-- **JWT** - 认证
+- **SQLite / PostgreSQL** - 数据库 (开发环境使用 SQLite)
+- **JWT** - 认证 (python-jose + passlib)
 
 ### 前端
 - **React 18** - UI 框架
@@ -19,9 +28,16 @@
 - **Vite** - 构建工具
 - **Ant Design 5** - UI 组件库
 - **Zustand** - 状态管理
-- **React Query** - 数据获取
+- **TanStack Query** - 数据获取
 - **Recharts** - 图表
 - **Tailwind CSS** - 样式
+
+### 设计系统
+- **UI 参考**: [BankDash UI Kit](https://www.figma.com/design/0BbiIDxkjPvPWZnsOxAcG0/BankDash)
+- **主色调**: `#1814F3` (Primary), `#396AFF` (Secondary)
+- **文字颜色**: `#232323` (主要), `#718EBF` (次要), `#B1B1B1` (禁用)
+- **背景色**: `#F5F7FA` (页面), `#FFFFFF` (卡片)
+- **边框色**: `#E6EFF5`
 
 ## 功能特性
 
@@ -61,17 +77,22 @@ docker-compose up -d
 ```bash
 cd backend
 
-# 安装依赖 (使用 Poetry)
-poetry install
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
 
-# 创建数据库
-createdb inbound_management
+# 安装依赖
+pip install -e .
 
-# 运行迁移
+# 运行迁移 (自动创建 SQLite 数据库)
 alembic upgrade head
 
+# 初始化种子数据
+python seed_data.py
+
 # 启动开发服务器
-poetry run uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 ```
 
 #### 前端
@@ -84,6 +105,19 @@ npm install
 
 # 启动开发服务器
 npm run dev
+
+# 构建生产版本
+npm run build
+```
+
+### 快速启动脚本
+
+```bash
+# 后端 (终端 1)
+cd backend && source venv/bin/activate && uvicorn app.main:app --reload
+
+# 前端 (终端 2)
+cd frontend && npm run dev
 ```
 
 ## 项目结构
@@ -119,12 +153,35 @@ inbound_management_system/
         └── routes/           # 路由配置
 ```
 
-## API 文档
+## API 端点
 
-启动后端服务后，访问以下地址查看 API 文档：
+### 认证
+- `POST /api/v1/auth/login` - 用户登录
+- `POST /api/v1/auth/logout` - 用户登出
+- `GET /api/v1/auth/me` - 获取当前用户信息
 
-- **Swagger UI**: http://localhost:8000/api/v1/docs
-- **ReDoc**: http://localhost:8000/api/v1/redoc
+### 仪表盘
+- `GET /api/v1/dashboard/board` - 获取统计数据
+
+### 仓库管理
+- `GET/POST /api/v1/warehouses` - 仓库列表/创建
+- `GET/PUT/DELETE /api/v1/warehouses/{id}` - 仓库详情/更新/删除
+
+### 入库管理
+- `GET/POST /api/v1/inbound` - 入库列表/创建
+- `GET /api/v1/inbound/{id}` - 入库详情
+
+### 库存管理
+- `GET /api/v1/stock` - 库存列表
+- `GET /api/v1/stock/detail` - 出入库明细
+
+### 基础数据
+- `CRUD /api/v1/consumable-types` - 物品分类
+- `CRUD /api/v1/units` - 计量单位
+- `CRUD /api/v1/bulletins` - 公告管理
+
+### 用户管理
+- `CRUD /api/v1/users` - 用户管理
 
 ## 数据库设计
 

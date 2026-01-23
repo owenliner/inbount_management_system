@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Avatar, Dropdown, Input, Badge } from 'antd'
 import type { MenuProps } from 'antd'
@@ -82,7 +81,6 @@ const menuItems: MenuProps['items'] = [
 ]
 
 export default function MainLayout() {
-  const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
@@ -125,10 +123,7 @@ export default function MainLayout() {
       {/* Sidebar */}
       <Sider
         trigger={null}
-        collapsible
-        collapsed={collapsed}
         width={250}
-        collapsedWidth={80}
         style={{
           background: '#fff',
           borderRight: '1px solid #E6EFF5',
@@ -144,14 +139,12 @@ export default function MainLayout() {
           className="flex items-center h-[100px] px-6 cursor-pointer"
           onClick={() => navigate('/dashboard')}
         >
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">仓</span>
+          <div className="w-10 h-10 bg-[#396AFF] rounded-xl flex items-center justify-center">
+            <span className="text-white font-bold text-xl">仓</span>
           </div>
-          {!collapsed && (
-            <span className="ml-3 text-secondary font-bold text-xl tracking-tight">
-              仓储管理
-            </span>
-          )}
+          <span className="ml-3 text-[#343C6A] font-bold text-[22px] tracking-tight">
+            仓储管理
+          </span>
         </div>
 
         {/* Menu */}
@@ -169,7 +162,7 @@ export default function MainLayout() {
       </Sider>
 
       {/* Main Content Area */}
-      <Layout style={{ marginLeft: collapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>
+      <Layout style={{ marginLeft: 250 }}>
         {/* Header */}
         <Header
           style={{
@@ -207,10 +200,7 @@ export default function MainLayout() {
             />
 
             {/* Settings */}
-            <div
-              className="w-[50px] h-[50px] rounded-full bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => setCollapsed(!collapsed)}
-            >
+            <div className="w-[50px] h-[50px] rounded-full bg-[#F5F7FA] flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
               <SettingOutlined style={{ fontSize: 22, color: '#718EBF' }} />
             </div>
 
