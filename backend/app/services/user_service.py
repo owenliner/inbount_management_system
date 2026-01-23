@@ -135,3 +135,22 @@ class UserService:
         if user:
             user.last_login_time = datetime.utcnow()
             db.commit()
+
+    @staticmethod
+    def change_password(
+        db: Session, user_id: int, old_password: str, new_password: str
+    ) -> bool:
+        """Change user's password."""
+        user = db.query(User).filter(User.user_id == user_id).first()
+        if not user:
+            return False
+
+        # Verify old password
+        if not verify_password(old_password, user.password):
+            return False
+
+        # Update password
+        user.password = get_password_hash(new_password)
+        user.modify_time = datetime.utcnow()
+        db.commit()
+        return True

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_active_user
 from app.services.user_service import UserService
-from app.schemas.user import UserCreate, UserUpdate, UserResponse
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, ChangePassword
 
 router = APIRouter()
 
@@ -135,3 +135,30 @@ async def delete_user(
         raise HTTPException(status_code=404, detail="User not found")
 
     return {"code": 0, "msg": "success"}
+
+
+@router.put("/{user_id}/password", response_model=dict)
+async def change_password(
+    user_id: int,
+    password_data: ChangePassword,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """Change user's password."""
+    # Users can only change their own password unless they're admin
+    if current_user.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only change your own password",
+        )
+
+    success = UserService.change_password(
+        db, user_id, password_data.old_password, password_data.new_password
+    )
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid old password or user not found",
+        )
+
+    return {"code": 0, "msg": "Password changed successfully"}

@@ -66,3 +66,10 @@ class UserInDB(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class ChangePassword(BaseModel):
+    """Change password schema."""
+
+    old_password: str
+    new_password: str

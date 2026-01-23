@@ -14,6 +14,8 @@ import PurchaseRequestList from './pages/Purchase/PurchaseRequestList'
 import GoodsRequestList from './pages/GoodsRequest/GoodsRequestList'
 import BulletinList from './pages/Bulletin/BulletinList'
 import UserList from './pages/User/UserList'
+import SettingsPage from './pages/Settings/SettingsPage'
+import ProfilePage from './pages/Profile/ProfilePage'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -45,6 +47,8 @@ function App() {
         <Route path="goods-requests" element={<GoodsRequestList />} />
         <Route path="bulletins" element={<BulletinList />} />
         <Route path="users" element={<UserList />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
     </Routes>
   )

@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, Input, Badge } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Input } from 'antd'
 import type { MenuProps } from 'antd'
 import {
   HomeOutlined,
@@ -11,9 +12,10 @@ import {
   LogoutOutlined,
   SettingOutlined,
   SearchOutlined,
-  BellOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '@/store/authStore'
+import NotificationDropdown from '@/components/Notification/NotificationDropdown'
+import GlobalSearch from '@/components/Search/GlobalSearch'
 
 const { Header, Sider, Content } = Layout
 
@@ -80,13 +82,26 @@ const menuItems: MenuProps['items'] = [
   },
 ]
 
+// Get selected menu key based on current path (handles sub-routes)
+function getSelectedKey(pathname: string): string {
+  // Handle sub-routes
+  if (pathname.startsWith('/inbound/')) return '/inbound'
+  if (pathname.startsWith('/stock/') && pathname !== '/stock/detail') return '/stock'
+  return pathname
+}
+
 export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  const selectedKey = getSelectedKey(location.pathname)
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
-    if (key !== 'setting') {
+    if (key === 'setting') {
+      navigate('/settings')
+    } else {
       navigate(key)
     }
   }
@@ -94,6 +109,14 @@ export default function MainLayout() {
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'profile') {
+      navigate('/profile')
+    } else if (key === 'settings') {
+      navigate('/settings')
+    }
   }
 
   const userMenuItems: MenuProps['items'] = [
@@ -150,7 +173,7 @@ export default function MainLayout() {
         {/* Menu */}
         <Menu
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={[selectedKey]}
           items={menuItems}
           onClick={handleMenuClick}
           style={{
@@ -190,29 +213,31 @@ export default function MainLayout() {
             <Input
               prefix={<SearchOutlined style={{ color: '#8BA3CB' }} />}
               placeholder="搜索..."
+              readOnly
+              onClick={() => setSearchOpen(true)}
               style={{
                 width: 255,
                 height: 50,
                 borderRadius: 40,
                 backgroundColor: '#F5F7FA',
                 border: 'none',
+                cursor: 'pointer',
               }}
             />
 
             {/* Settings */}
-            <div className="w-[50px] h-[50px] rounded-full bg-[#F5F7FA] flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors">
+            <div
+              className="w-[50px] h-[50px] rounded-full bg-[#F5F7FA] flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+              onClick={() => navigate('/settings')}
+            >
               <SettingOutlined style={{ fontSize: 22, color: '#718EBF' }} />
             </div>
 
             {/* Notifications */}
-            <Badge count={3} size="small">
-              <div className="w-[50px] h-[50px] rounded-full bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
-                <BellOutlined style={{ fontSize: 22, color: '#FE5C73' }} />
-              </div>
-            </Badge>
+            <NotificationDropdown onViewAll={() => navigate('/bulletins')} />
 
             {/* User Avatar */}
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+            <Dropdown menu={{ items: userMenuItems, onClick: handleUserMenuClick }} placement="bottomRight" trigger={['click']}>
               <div className="flex items-center cursor-pointer">
                 <Avatar
                   size={60}
@@ -237,6 +262,9 @@ export default function MainLayout() {
           <Outlet />
         </Content>
       </Layout>
+
+      {/* Global Search Modal */}
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Custom Styles */}
       <style>{`
@@ -296,6 +324,8 @@ function getPageTitle(pathname: string): string {
     '/goods-requests': '物品审批',
     '/bulletins': '公告管理',
     '/users': '用户管理',
+    '/settings': '系统设置',
+    '/profile': '个人信息',
   }
   return titles[pathname] || '仓储管理系统'
 }
