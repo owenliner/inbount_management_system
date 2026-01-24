@@ -16,20 +16,50 @@ inbound_management_system/
 │   │   ├── config.py       # 配置管理
 │   │   ├── database.py     # 数据库连接
 │   │   ├── api/v1/         # API 路由
+│   │   │   ├── auth.py     # 认证
+│   │   │   ├── users.py    # 用户管理
+│   │   │   ├── warehouses.py # 仓库管理
+│   │   │   ├── stock.py    # 库存管理
+│   │   │   ├── inbound.py  # 入库管理
+│   │   │   ├── purchase_requests.py # 采购申请
+│   │   │   ├── goods_requests.py    # 物品审批
+│   │   │   ├── bulletins.py # 公告管理
+│   │   │   └── dashboard.py # 仪表盘
 │   │   ├── models/         # SQLAlchemy 模型
+│   │   │   ├── user.py     # User, Role, UserRole
+│   │   │   ├── warehouse.py # Storehouse, ConsumableType, Unit
+│   │   │   ├── stock.py    # StockInfo, StockPut, StockOut, GoodsBelong
+│   │   │   ├── request.py  # PurchaseRequest, GoodsRequest
+│   │   │   └── bulletin.py # Bulletin
 │   │   ├── schemas/        # Pydantic 模式
 │   │   ├── services/       # 业务逻辑
 │   │   └── core/           # 核心模块 (安全、依赖)
 │   ├── alembic/            # 数据库迁移
+│   ├── seed_data.py        # 测试数据脚本
 │   ├── venv/               # Python 虚拟环境
 │   └── inbound_management.db  # SQLite 数据库文件
 ├── frontend/               # React 前端
 │   ├── src/
 │   │   ├── api/           # API 客户端 (axios)
 │   │   ├── components/    # 通用组件
+│   │   │   ├── Search/    # 全局搜索
+│   │   │   └── Notification/ # 通知下拉
 │   │   ├── pages/         # 页面组件
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Warehouses.tsx
+│   │   │   ├── Inbound/
+│   │   │   ├── Stock/
+│   │   │   ├── ConsumableTypes.tsx
+│   │   │   ├── Units.tsx
+│   │   │   ├── PurchaseRequests.tsx
+│   │   │   ├── GoodsRequests.tsx
+│   │   │   ├── Bulletins.tsx
+│   │   │   ├── Users.tsx
+│   │   │   ├── Settings.tsx
+│   │   │   └── Profile.tsx
 │   │   ├── store/         # Zustand 状态管理
 │   │   └── routes/        # 路由配置
+│   ├── TEST_REPORT.md     # Playwright 测试报告
 │   ├── index.html
 │   └── vite.config.ts
 └── material_cos/           # 旧版 Java 系统 (参考)
@@ -42,6 +72,9 @@ inbound_management_system/
 cd backend
 source venv/bin/activate
 uvicorn app.main:app --reload --port 8000
+
+# 重置数据库并初始化测试数据
+rm inbound_management.db && python seed_data.py
 ```
 
 ### 前端
@@ -106,15 +139,56 @@ interface ApiResponse<T> {
 | storehouses | 仓库信息 |
 | consumable_types | 物品分类 |
 | units | 计量单位 |
-| stock_info | 库存主表 |
+| stock_info | 库存主表 (is_in: 0=库存, 1=入库中, 2=出库中) |
 | stock_put | 入库记录 |
-| stock_out | 出库记录 |
+| stock_out | 出库记录 (预留) |
+| goods_belong | 入库/出库明细 |
+| purchase_requests | 采购申请 |
+| purchase_request_items | 采购申请明细 |
+| goods_requests | 物品审批 |
+| goods_request_items | 物品审批明细 |
 | bulletins | 公告信息 |
 
-## 默认账号
+## 测试账号
 
-- 用户名: `admin`
-- 密码: `admin123`
+| 用户名 | 密码 | 角色 |
+|--------|------|------|
+| admin | admin123 | ADMIN (管理员) |
+| zhangsan | 123456 | MANAGER (经理) |
+| lisi | 123456 | OPERATOR (操作员) |
+| wangwu | 123456 | OPERATOR (操作员) |
+
+## 测试数据
+
+运行 `python seed_data.py` 会创建：
+- 5 个库房
+- 6 个物品类型
+- 8 个计量单位
+- 15 个库存物品
+- 5 个入库记录
+- 5 个采购申请 (不同状态)
+- 5 个物品审批 (不同状态)
+- 6 个公告
+
+## 功能模块状态
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| 登录/认证 | ✅ 完成 | JWT 认证 |
+| 仪表盘 | ✅ 完成 | 统计、图表、公告、预警 |
+| 库房管理 | ✅ 完成 | CRUD |
+| 入库管理 | ✅ 完成 | 创建、列表、详情 |
+| 库存管理 | ✅ 完成 | 列表、明细 |
+| 物品类型 | ✅ 完成 | CRUD |
+| 计量单位 | ✅ 完成 | CRUD |
+| 采购申请 | ✅ 完成 | CRUD、审批状态 |
+| 物品审批 | ✅ 完成 | CRUD、审批状态 |
+| 公告管理 | ✅ 完成 | CRUD |
+| 用户管理 | ✅ 完成 | 列表、删除 |
+| 系统设置 | ✅ 完成 | 通知、显示、库存设置 |
+| 个人信息 | ✅ 完成 | 资料查看、密码修改 |
+| 全局搜索 | ✅ 完成 | 搜索库存和仓库 |
+| 通知下拉 | ✅ 完成 | 显示最新公告 |
 
 ## 注意事项
 
@@ -124,3 +198,9 @@ interface ApiResponse<T> {
 4. UI 组件优先使用 Ant Design 5
 5. 样式优先使用 Tailwind CSS
 6. 所有颜色使用设计系统定义的变量
+7. 出库功能已预留数据结构，待后续开发
+
+## 已知问题
+
+- Ant Design 废弃 API 警告 (`dropdownRender`, `addonAfter`) - 不影响功能
+- React Router Future Flag 警告 - 不影响功能

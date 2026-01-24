@@ -39,16 +39,22 @@
 - **背景色**: `#F5F7FA` (页面), `#FFFFFF` (卡片)
 - **边框色**: `#E6EFF5`
 
-## 功能特性
+## 功能模块
 
-- **用户认证** - JWT 登录/登出
-- **仪表盘** - 统计数据、图表、公告
-- **库房管理** - 仓库信息 CRUD
-- **入库管理** - 入库单创建、Excel 导入
-- **库存管理** - 库存列表、出入库明细
-- **基础数据** - 物品类型、计量单位管理
-- **采购流程** - 采购申请、物品审批
-- **公告管理** - 系统公告
+| 模块 | 功能描述 |
+|------|----------|
+| **仪表盘** | 统计数据、图表、公告、库存预警 |
+| **库房管理** | 仓库信息 CRUD |
+| **入库管理** | 入库单创建、详情查看 |
+| **库存管理** | 库存列表、出入库明细 |
+| **物品类型** | 物品分类管理 |
+| **计量单位** | 单位管理 |
+| **采购申请** | 采购申请、审批流程 |
+| **物品审批** | 物品领用审批 |
+| **公告管理** | 系统公告发布 |
+| **用户管理** | 用户账户管理 |
+| **系统设置** | 通知、显示、库存设置 |
+| **个人信息** | 个人资料、密码修改 |
 
 ## 快速开始
 
@@ -125,6 +131,7 @@ cd frontend && npm run dev
 ```
 inbound_management_system/
 ├── README.md                 # 项目说明
+├── CLAUDE.md                 # Claude 上下文
 ├── docker-compose.yml        # Docker 编排
 ├── .env.example              # 环境变量示例
 ├── docs/                     # 文档
@@ -132,6 +139,7 @@ inbound_management_system/
 │   └── deployment/           # 部署文档
 ├── backend/                  # FastAPI 后端
 │   ├── pyproject.toml        # Python 依赖
+│   ├── seed_data.py          # 测试数据脚本
 │   ├── alembic/              # 数据库迁移
 │   └── app/
 │       ├── main.py           # 应用入口
@@ -145,6 +153,7 @@ inbound_management_system/
 └── frontend/                 # React 前端
     ├── package.json          # Node 依赖
     ├── vite.config.ts        # Vite 配置
+    ├── TEST_REPORT.md        # 测试报告
     └── src/
         ├── api/              # API 客户端
         ├── components/       # 组件
@@ -180,8 +189,36 @@ inbound_management_system/
 - `CRUD /api/v1/units` - 计量单位
 - `CRUD /api/v1/bulletins` - 公告管理
 
+### 采购流程
+- `CRUD /api/v1/purchase-requests` - 采购申请
+- `CRUD /api/v1/goods-requests` - 物品审批
+
 ### 用户管理
 - `CRUD /api/v1/users` - 用户管理
+
+## 测试账号
+
+| 用户名 | 密码 | 角色 | 说明 |
+|--------|------|------|------|
+| admin | admin123 | ADMIN | 系统管理员 |
+| zhangsan | 123456 | MANAGER | 仓库经理 |
+| lisi | 123456 | OPERATOR | 操作员 |
+| wangwu | 123456 | OPERATOR | 操作员 |
+
+## 测试数据
+
+运行 `python seed_data.py` 后会生成以下测试数据：
+
+| 模块 | 数量 | 示例 |
+|------|------|------|
+| 库房 | 5 | 主仓库、东区仓库、西区仓库、南区仓库、备用仓库 |
+| 物品类型 | 6 | 办公用品、电子设备、清洁用品、劳保用品、食品饮料、维修工具 |
+| 计量单位 | 8 | 个、箱、包、瓶、台、套、卷、把 |
+| 库存物品 | 15 | A4打印纸、中性笔、笔记本电脑、洗手液等 |
+| 入库记录 | 5 | 不同时间、不同操作员的入库单 |
+| 采购申请 | 5 | 待审核、已通过、已拒绝、已完成等状态 |
+| 物品审批 | 5 | 已提交、正在审核、审核通过等状态 |
+| 公告 | 6 | 系统上线、库存盘点、春节放假等公告 |
 
 ## 数据库设计
 
@@ -190,11 +227,6 @@ inbound_management_system/
 ## 部署指南
 
 详见 [部署文档](docs/deployment/deployment-guide.md)
-
-## 默认账号
-
-- 用户名: `admin`
-- 密码: `admin123`
 
 ## License
 
