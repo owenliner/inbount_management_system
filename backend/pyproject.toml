@@ -28,6 +28,13 @@ httpx = "^0.26.0"
 black = "^24.1.0"
 ruff = "^0.1.14"
 
+[tool.poetry.group.desktop]
+optional = true
+
+[tool.poetry.group.desktop.dependencies]
+pywebview = "^5.0"
+pyinstaller = "^6.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
