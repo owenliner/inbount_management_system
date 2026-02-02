@@ -24,20 +24,34 @@ def init_database_if_needed():
     db_path = _get_desktop_data_dir() / "inbound_management.db"
     if not db_path.exists():
         print("First launch detected — initializing database...")
-        # Import triggers table creation via lifespan, but we also need seed data
         from app.database import engine, Base
         Base.metadata.create_all(bind=engine)
-        from seed_data import seed_database
-        seed_database()
+
+        # seed_data.py is bundled as a data file, not a Python module.
+        # Use importlib.util to load it from _MEIPASS or the script directory.
+        import importlib.util
+        if getattr(sys, "frozen", False):
+            seed_path = os.path.join(sys._MEIPASS, "seed_data.py")
+        else:
+            seed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seed_data.py")
+
+        spec = importlib.util.spec_from_file_location("seed_data", seed_path)
+        seed_mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(seed_mod)
+        seed_mod.seed_database()
         print("Database initialized successfully.")
 
 
 def start_server(port: int):
     """Start uvicorn in the current thread (meant to run as daemon)."""
     import uvicorn
+    from app.main import app as fastapi_app
 
+    # Pass the app object directly instead of import string.
+    # String-based import ("app.main:app") fails in frozen mode because
+    # uvicorn's import machinery can't find the bundled 'app' package.
     uvicorn.run(
-        "app.main:app",
+        fastapi_app,
         host="127.0.0.1",
         port=port,
         log_level="warning",
