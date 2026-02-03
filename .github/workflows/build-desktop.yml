@@ -58,12 +58,31 @@ jobs:
         working-directory: backend
         shell: bash
         run: |
-          # On Windows, explicitly add Python DLL path
+          # On Windows, copy Python DLL to ensure it's included
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             PYTHON_DIR=$(dirname $(which python))
-            export PATH="$PYTHON_DIR:$PATH"
+            echo "Python directory: $PYTHON_DIR"
+            ls -la "$PYTHON_DIR"/*.dll 2>/dev/null || echo "No DLLs in Python dir"
+            # Copy python311.dll to current directory so PyInstaller finds it
+            cp "$PYTHON_DIR/python311.dll" . 2>/dev/null || cp "$PYTHON_DIR/python3.dll" . 2>/dev/null || echo "DLL copy skipped"
           fi
           pyinstaller desktop.spec --noconfirm
+
+      - name: Copy Python DLL (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pythonPath = (Get-Command python).Source
+          $pythonDir = Split-Path $pythonPath
+          $dllPath = Join-Path $pythonDir "python311.dll"
+          $destPath = "backend/dist/InboundManagement"
+          if (Test-Path $dllPath) {
+            Copy-Item $dllPath -Destination $destPath -Force
+            Write-Host "Copied python311.dll to $destPath"
+          } else {
+            Write-Host "python311.dll not found at $dllPath"
+            Get-ChildItem $pythonDir -Filter "*.dll" | ForEach-Object { Write-Host $_.FullName }
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

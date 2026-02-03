@@ -10,24 +10,37 @@ block_cipher = None
 # Collect Python shared library on Windows
 binaries = []
 if sys.platform == "win32":
-    # Find Python DLL using sys.base_prefix (more reliable than sysconfig)
+    import ctypes.util
+    # Find Python DLL using multiple methods
     python_dir = Path(sys.base_prefix)
     dll_name = f"python{sys.version_info.major}{sys.version_info.minor}.dll"
 
-    # Check multiple possible locations
+    # Method 1: Check sys.base_prefix
     search_paths = [
         python_dir / dll_name,
         python_dir / "DLLs" / dll_name,
-        Path(os.environ.get("SYSTEMROOT", "C:\\Windows")) / "System32" / dll_name,
     ]
 
+    # Method 2: Check PATH directories
+    for path_dir in os.environ.get("PATH", "").split(os.pathsep):
+        search_paths.append(Path(path_dir) / dll_name)
+
+    # Method 3: Use ctypes to find the DLL
+    found_dll = ctypes.util.find_library(f"python{sys.version_info.major}{sys.version_info.minor}")
+    if found_dll:
+        search_paths.insert(0, Path(found_dll))
+
     for dll_path in search_paths:
-        if dll_path.exists():
-            print(f"Found Python DLL: {dll_path}")
-            binaries.append((str(dll_path), "."))
-            break
+        try:
+            if dll_path.exists():
+                print(f"Found Python DLL: {dll_path}")
+                binaries.append((str(dll_path), "."))
+                break
+        except:
+            continue
     else:
-        print(f"Warning: Could not find {dll_name} in {search_paths}")
+        # If not found, PyInstaller should still work - it has its own mechanisms
+        print(f"Note: Could not manually locate {dll_name}, relying on PyInstaller auto-detection")
 
 # Paths
 backend_dir = Path(SPECPATH)
