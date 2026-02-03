@@ -2,6 +2,31 @@
 
 基于 Python FastAPI + React 的现代化仓储管理系统，用于管理商品入库、库存跟踪和采购流程。
 
+**支持 Web 版和桌面版 (Windows/macOS)**
+
+[![Build Desktop App](https://github.com/owenliner/inbount_management_system/actions/workflows/build-desktop.yml/badge.svg)](https://github.com/owenliner/inbount_management_system/actions/workflows/build-desktop.yml)
+
+## 下载桌面版
+
+从 [GitHub Releases](https://github.com/owenliner/inbount_management_system/releases) 下载最新版本：
+
+| 平台 | 下载 | 说明 |
+|------|------|------|
+| **Windows** | `InboundManagement-windows.zip` | 解压后运行 `InboundManagement.exe` |
+| **macOS** | `InboundManagement-macos.zip` | 解压后运行 `InboundManagement.app` |
+
+### macOS 首次运行
+
+macOS 可能提示"已损坏"，需要在终端执行：
+
+```bash
+xattr -cr /path/to/InboundManagement.app
+```
+
+### Windows 首次运行
+
+如果弹出"Windows 已保护你的电脑"，点击"更多信息" → "仍要运行"。
+
 ## 界面预览
 
 系统采用 BankDash UI Kit 设计风格，界面简洁现代。
@@ -219,6 +244,40 @@ inbound_management_system/
 | 采购申请 | 5 | 待审核、已通过、已拒绝、已完成等状态 |
 | 物品审批 | 5 | 已提交、正在审核、审核通过等状态 |
 | 公告 | 6 | 系统上线、库存盘点、春节放假等公告 |
+
+## 桌面应用开发
+
+桌面版使用 PyWebView + PyInstaller 打包，将 FastAPI 后端和 React 前端打包为单一可执行文件。
+
+### 本地构建
+
+```bash
+# 1. 构建前端
+cd frontend && npm run build
+
+# 2. 安装桌面依赖
+cd ../backend
+pip install pywebview pyinstaller "bcrypt<5"
+
+# 3. 打包
+pyinstaller desktop.spec
+
+# 4. 运行
+# macOS
+open dist/InboundManagement.app
+# Windows
+dist\InboundManagement\InboundManagement.exe
+```
+
+### 桌面版特性
+
+- **单文件部署** — 无需安装 Python/Node.js 环境
+- **原生窗口** — 使用系统 WebView，体积小 (~40MB)
+- **自动初始化** — 首次运行自动创建数据库和测试数据
+- **数据隔离** — 数据库存储在用户目录：
+  - Windows: `%APPDATA%\InboundManagement\`
+  - macOS: `~/Library/Application Support/InboundManagement/`
+  - Linux: `~/.local/share/InboundManagement/`
 
 ## 数据库设计
 

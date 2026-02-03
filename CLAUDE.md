@@ -12,8 +12,8 @@
 inbound_management_system/
 ├── backend/                 # FastAPI 后端
 │   ├── app/
-│   │   ├── main.py         # 应用入口
-│   │   ├── config.py       # 配置管理
+│   │   ├── main.py         # 应用入口 (含静态文件服务)
+│   │   ├── config.py       # 配置管理 (含 DESKTOP_MODE)
 │   │   ├── database.py     # 数据库连接
 │   │   ├── api/v1/         # API 路由
 │   │   │   ├── auth.py     # 认证
@@ -36,6 +36,8 @@ inbound_management_system/
 │   │   └── core/           # 核心模块 (安全、依赖)
 │   ├── alembic/            # 数据库迁移
 │   ├── seed_data.py        # 测试数据脚本
+│   ├── desktop_app.py      # 桌面应用入口 (PyWebView)
+│   ├── desktop.spec        # PyInstaller 打包配置
 │   ├── venv/               # Python 虚拟环境
 │   └── inbound_management.db  # SQLite 数据库文件
 ├── frontend/               # React 前端
@@ -83,6 +85,24 @@ cd frontend
 npm run dev      # 开发服务器 (localhost:5173)
 npm run build    # 生产构建
 npm run lint     # 代码检查
+```
+
+### 桌面应用
+```bash
+cd backend
+
+# 安装桌面依赖
+pip install pywebview pyinstaller "bcrypt<5"
+
+# 开发模式运行 (不打包)
+python desktop_app.py
+
+# 打包
+pyinstaller desktop.spec
+
+# 运行打包后的应用
+open dist/InboundManagement.app  # macOS
+# dist\InboundManagement\InboundManagement.exe  # Windows
 ```
 
 ## 设计系统 (BankDash)
@@ -189,6 +209,7 @@ interface ApiResponse<T> {
 | 个人信息 | ✅ 完成 | 资料查看、密码修改 |
 | 全局搜索 | ✅ 完成 | 搜索库存和仓库 |
 | 通知下拉 | ✅ 完成 | 显示最新公告 |
+| 桌面应用 | ✅ 完成 | PyWebView + PyInstaller (Win/Mac) |
 
 ## 注意事项
 
@@ -200,7 +221,35 @@ interface ApiResponse<T> {
 6. 所有颜色使用设计系统定义的变量
 7. 出库功能已预留数据结构，待后续开发
 
+## 桌面应用架构
+
+### 技术方案
+- **PyWebView** — 使用系统原生 WebView 显示前端，体积小 (~40MB)
+- **PyInstaller** — 打包 Python + 前端为单一可执行文件
+- **GitHub Actions** — 自动构建 Windows (.exe) 和 macOS (.app)
+
+### 关键文件
+| 文件 | 说明 |
+|------|------|
+| `backend/desktop_app.py` | 桌面入口：启动 uvicorn + pywebview 窗口 |
+| `backend/desktop.spec` | PyInstaller 打包配置 |
+| `backend/app/config.py` | `DESKTOP_MODE` 配置，控制数据库路径 |
+| `backend/app/main.py` | 静态文件服务 + SPA fallback |
+| `.github/workflows/build-desktop.yml` | CI/CD 构建流程 |
+
+### 桌面模式数据库路径
+- **Windows**: `%APPDATA%\InboundManagement\inbound_management.db`
+- **macOS**: `~/Library/Application Support/InboundManagement/inbound_management.db`
+- **Linux**: `~/.local/share/InboundManagement/inbound_management.db`
+
+### macOS 运行问题
+下载的 .app 首次运行会提示"已损坏"，需执行：
+```bash
+xattr -cr /path/to/InboundManagement.app
+```
+
 ## 已知问题
 
 - Ant Design 废弃 API 警告 (`dropdownRender`, `addonAfter`) - 不影响功能
 - React Router Future Flag 警告 - 不影响功能
+- passlib 与 bcrypt 5.x 不兼容，需使用 `bcrypt<5`
