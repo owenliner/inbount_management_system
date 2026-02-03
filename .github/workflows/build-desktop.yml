@@ -48,6 +48,7 @@ jobs:
 
       - name: Install Python dependencies
         working-directory: backend
+        shell: bash
         run: |
           pip install --upgrade pip
           pip install pywebview pyinstaller
@@ -55,7 +56,14 @@ jobs:
 
       - name: Build with PyInstaller
         working-directory: backend
-        run: pyinstaller desktop.spec
+        shell: bash
+        run: |
+          # On Windows, explicitly add Python DLL path
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            PYTHON_DIR=$(dirname $(which python))
+            export PATH="$PYTHON_DIR:$PATH"
+          fi
+          pyinstaller desktop.spec --noconfirm
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

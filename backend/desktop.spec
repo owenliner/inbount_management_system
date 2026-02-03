@@ -2,9 +2,28 @@
 """PyInstaller spec for Inbound Management System desktop app."""
 
 import sys
+import os
 from pathlib import Path
 
 block_cipher = None
+
+# Collect Python shared library on Windows
+binaries = []
+if sys.platform == "win32":
+    import sysconfig
+    python_dir = Path(sysconfig.get_config_var('installed_base'))
+    # Look for python3xx.dll in common locations
+    for dll_name in [f"python{sys.version_info.major}{sys.version_info.minor}.dll",
+                     f"python{sys.version_info.major}{sys.version_info.minor}t.dll"]:
+        dll_path = python_dir / dll_name
+        if dll_path.exists():
+            binaries.append((str(dll_path), "."))
+            break
+        # Also check in the DLLs subdirectory
+        dll_path = python_dir / "DLLs" / dll_name
+        if dll_path.exists():
+            binaries.append((str(dll_path), "."))
+            break
 
 # Paths
 backend_dir = Path(SPECPATH)
@@ -111,7 +130,7 @@ excludes = [
 a = Analysis(
     ["desktop_app.py"],
     pathex=[str(backend_dir)],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
